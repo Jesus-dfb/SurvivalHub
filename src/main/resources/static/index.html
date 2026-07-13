@@ -1,0 +1,370 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survival Hub</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark">SH</div>
+                <div>
+                    <h1>Survival Hub</h1>
+                    <p>Gestor de mundos survival</p>
+                </div>
+            </div>
+
+            <section class="auth-panel">
+                <div id="authLoggedOut">
+                    <span>Sesion no iniciada</span>
+                    <div class="auth-actions">
+                        <button type="button" class="primary-button compact" id="showLoginButton">Entrar</button>
+                        <button type="button" class="ghost-button compact" id="showRegisterButton">Crear cuenta</button>
+                    </div>
+                </div>
+
+                <div id="authLoggedIn" hidden>
+                    <span>Sesion iniciada</span>
+                    <strong id="currentUserLabel">Usuario</strong>
+                    <button type="button" class="ghost-button compact" id="logoutButton">Salir</button>
+                </div>
+            </section>
+
+            <nav class="app-nav" aria-label="Navegacion principal">
+                <button type="button" class="nav-button active" id="worldsNavButton">Mundos</button>
+                <button type="button" class="nav-button" id="presetsNavButton">Biblioteca</button>
+            </nav>
+
+            <form id="worldForm" class="panel-form">
+                <input type="hidden" id="worldId">
+                <label for="worldName">Mundo</label>
+                <input id="worldName" type="text" placeholder="Nombre del mundo" required>
+
+                <label for="worldGame">Juego</label>
+                <input id="worldGame" type="text" placeholder="Nombre del juego" required>
+
+                <label for="worldDescription">Descripción</label>
+                <textarea id="worldDescription" rows="3" placeholder="Objetivo en este mundo"></textarea>
+
+                <div class="form-actions">
+                    <button type="submit" class="primary-button" id="saveWorldButton">Crear mundo</button>
+                    <button type="button" class="ghost-button" id="resetWorldButton">Limpiar</button>
+                </div>
+            </form>
+
+            <div class="section-heading">
+                <span>Mundos</span>
+                <span id="worldCount">0</span>
+            </div>
+            <div id="worldList" class="world-list"></div>
+        </aside>
+
+        <main class="workspace">
+            <div class="view" id="authView" hidden>
+                <section class="auth-screen">
+                    <div>
+                        <p class="eyebrow">Acceso a Survival Hub</p>
+                        <h2>Gestiona tus mundos y comparte guias con tu cuenta</h2>
+                        <p>Inicia sesion para cargar tus mundos, publicar guias, votar contenido y anadir objetivos desde la biblioteca.</p>
+                    </div>
+
+                    <div class="auth-screen-grid">
+                        <section class="panel auth-card" id="loginPanel">
+                            <div class="panel-title">
+                                <div>
+                                    <h3>Iniciar sesion</h3>
+                                    <p>Entra con tu usuario o email</p>
+                                </div>
+                            </div>
+                            <form id="screenLoginForm" class="panel-form">
+                                <input id="screenLoginUsername" type="text" placeholder="Usuario o email" required>
+                                <input id="screenLoginPassword" type="password" placeholder="Contrasena" required>
+                                <button type="submit" class="primary-button">Entrar</button>
+                            </form>
+                        </section>
+
+                        <section class="panel auth-card" id="registerPanel">
+                            <div class="panel-title">
+                                <div>
+                                    <h3>Crear cuenta</h3>
+                                    <p>Registra un usuario para publicar y votar</p>
+                                </div>
+                            </div>
+                            <form id="screenRegisterForm" class="panel-form">
+                                <input id="screenRegisterUsername" type="text" placeholder="Usuario" required>
+                                <input id="screenRegisterEmail" type="email" placeholder="Email">
+                                <input id="screenRegisterDisplayName" type="text" placeholder="Nombre visible">
+                                <input id="screenRegisterPassword" type="password" placeholder="Contrasena" required>
+                                <button type="submit" class="ghost-button">Crear cuenta</button>
+                            </form>
+                        </section>
+                    </div>
+                </section>
+            </div>
+
+            <div class="view active-view" id="worldsView">
+                <section class="world-header">
+                    <div>
+                        <p class="eyebrow" id="selectedWorldGame">Selecciona un mundo</p>
+                        <h2 id="selectedWorldName">Survival Hub</h2>
+                        <p id="selectedWorldDescription">Crea o selecciona un mundo para gestionar miembros, tareas y recursos.</p>
+                    </div>
+                    <button id="deleteWorldButton" class="danger-button" type="button">Borrar mundo</button>
+                </section>
+
+                <section class="metrics-grid">
+                    <div class="metric">
+                        <span>Miembros</span>
+                        <strong id="memberMetric">0</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Tareas</span>
+                        <strong id="taskMetric">0</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Recursos</span>
+                        <strong id="resourceMetric">0</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Progreso</span>
+                        <strong id="progressMetric">0%</strong>
+                    </div>
+                </section>
+
+                <div class="content-grid">
+                    <section class="panel">
+                        <div class="panel-title">
+                            <h3>Miembros</h3>
+                        </div>
+                        <form id="memberForm" class="panel-form compact-form">
+                            <input type="hidden" id="memberId">
+                            <input id="memberName" type="text" placeholder="Nombre" required>
+                            <input id="memberRole" type="text" placeholder="Rol" required>
+                            <button type="submit" class="primary-button">Guardar miembro</button>
+                        </form>
+                        <div id="memberList" class="item-list"></div>
+                    </section>
+
+                    <section class="panel">
+                        <div class="panel-title">
+                            <h3>Tareas</h3>
+                            <div class="title-actions">
+                                <select id="taskFilter" aria-label="Filtro de tareas">
+                                    <option value="all">Todas</option>
+                                    <option value="pending">Pendientes</option>
+                                    <option value="completed">Completadas</option>
+                                </select>
+                            </div>
+                        </div>
+                        <form id="taskForm" class="panel-form compact-form">
+                            <input type="hidden" id="taskId">
+                            <input id="taskTitle" type="text" placeholder="Título" required>
+                            <textarea id="taskDescription" rows="3" placeholder="Descripción"></textarea>
+                            <div class="split-fields">
+                                <select id="taskPriority" aria-label="Prioridad">
+                                    <option value="Alta">Alta</option>
+                                    <option value="Media">Media</option>
+                                    <option value="Baja">Baja</option>
+                                </select>
+                                <input id="taskDueDate" type="date" aria-label="Fecha objetivo">
+                            </div>
+                            <label class="checkbox-line">
+                                <input id="taskCompleted" type="checkbox">
+                                <span>Tarea completada</span>
+                            </label>
+                            <button type="submit" class="primary-button">Guardar tarea</button>
+                        </form>
+                        <div id="taskList" class="item-list"></div>
+                    </section>
+
+                    <section class="panel resources-panel">
+                        <div class="panel-title">
+                            <div>
+                                <h3>Recursos</h3>
+                                <p id="selectedTaskTitle">Selecciona una tarea</p>
+                            </div>
+                            <div class="title-actions">
+                                <select id="resourceFilter" aria-label="Filtro de recursos">
+                                    <option value="all">Todos</option>
+                                    <option value="pending">Pendientes</option>
+                                    <option value="completed">Completados</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="progress-block">
+                            <div class="progress-row">
+                                <span id="progressLabel">0 de 0 recursos</span>
+                                <strong id="progressValue">0%</strong>
+                            </div>
+                            <div class="progress-track">
+                                <div id="progressBar" class="progress-bar"></div>
+                            </div>
+                        </div>
+
+                        <form id="resourceForm" class="panel-form resource-form">
+                            <input type="hidden" id="resourceId">
+                            <div class="field-group">
+                                <label for="resourceName">Recurso</label>
+                                <input id="resourceName" type="text" placeholder="Bloques de piedra" required>
+                            </div>
+                            <div class="field-group">
+                                <label for="requiredQuantity">Necesario</label>
+                                <input id="requiredQuantity" type="number" min="0" placeholder="64" required>
+                            </div>
+                            <div class="field-group">
+                                <label for="collectedQuantity">Conseguido</label>
+                                <input id="collectedQuantity" type="number" min="0" placeholder="40" required>
+                            </div>
+                            <button type="submit" class="primary-button resource-save-button">Guardar recurso</button>
+                        </form>
+
+                        <div id="resourceList" class="item-list resource-list"></div>
+                    </section>
+                </div>
+            </div>
+
+            <div class="view" id="presetsView" hidden>
+                <section class="presets-header">
+                    <div>
+                        <p class="eyebrow">Biblioteca online simulada</p>
+                        <h2>Biblioteca survival</h2>
+                        <p>Publica rutas, builds y farms para que otros jugadores puedan anadirlas como objetivos en sus mundos.</p>
+                    </div>
+                    <div class="target-world-box">
+                        <label for="presetWorldSelect">Mundo destino</label>
+                        <select id="presetWorldSelect"></select>
+                        <span id="presetActiveWorldName">Selecciona un mundo para anadir guias</span>
+                        <label>Usuario activo</label>
+                        <span id="activeUserLabel">Inicia sesion para publicar y votar</span>
+                    </div>
+                </section>
+
+                <section class="panel guide-panel">
+                    <div class="panel-title">
+                        <div>
+                            <h3>Guias publicadas</h3>
+                            <p><span id="presetCount">0</span> disponibles en la biblioteca</p>
+                        </div>
+                    </div>
+
+                    <div class="preset-toolbar">
+                        <input id="presetSearch" type="search" placeholder="Buscar por título, juego o descripción">
+                        <select id="guideScopeFilter" aria-label="Filtrar por autor">
+                            <option value="all">Todas las guías</option>
+                            <option value="mine">Mis guías</option>
+                            <option value="favorites">Guardadas</option>
+                        </select>
+                        <select id="presetGameFilter" aria-label="Filtrar por juego">
+                            <option value="all">Todos los juegos</option>
+                        </select>
+                        <select id="presetTypeFilter" aria-label="Filtrar por tipo">
+                            <option value="all">Todos los tipos</option>
+                        </select>
+                        <select id="presetSort" aria-label="Ordenar guias">
+                            <option value="popular">Mas populares</option>
+                            <option value="rating">Mejor valorados</option>
+                            <option value="imports">Mas importados</option>
+                            <option value="recent">Mas recientes</option>
+                            <option value="title">Título</option>
+                        </select>
+                    </div>
+
+                    <div class="guide-layout">
+                        <form id="guideForm" class="panel-form guide-form">
+                            <input type="hidden" id="guideId">
+
+                            <div class="split-fields">
+                                <div class="field-group">
+                                    <label for="guideTitle">Título</label>
+                                    <input id="guideTitle" type="text" placeholder="Título para la guía" required>
+                                </div>
+                                <div class="field-group">
+                                    <label for="guideGame">Juego</label>
+                                    <input id="guideGame" type="text" placeholder="Nombre del juego" required>
+                                </div>
+                            </div>
+
+                            <div class="split-fields">
+                                <div class="field-group">
+                                    <label for="guideAuthor">Autor</label>
+                                    <input id="guideAuthor" type="text" placeholder="Usuario activo" readonly>
+                                </div>
+                                <div class="field-group">
+                                    <label for="guideDifficulty">Dificultad</label>
+                                    <select id="guideDifficulty">
+                                        <option value="Facil">Facil</option>
+                                        <option value="Media">Media</option>
+                                        <option value="Dificil">Dificil</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="split-fields">
+                                <div class="field-group">
+                                    <label for="guideType">Tipo</label>
+                                    <select id="guideType">
+                                        <option value="Estructura">Estructura</option>
+                                        <option value="Progresion">Progresion</option>
+                                        <option value="Boss">Boss</option>
+                                        <option value="Farm">Farm</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="field-group">
+                                    <label for="guideYoutubeUrl">Video</label>
+                                    <input id="guideYoutubeUrl" type="url" placeholder="https://www.youtube.com/watch?v=...">
+                                </div>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="guideDescription">Descripción</label>
+                                <textarea id="guideDescription" rows="3" placeholder="Descripción de la guía"></textarea>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="guideSteps">Pasos</label>
+                                <div id="guideSteps" class="guide-builder"></div>
+                                <button type="button" class="small-button" id="addGuideStepButton">Anadir paso</button>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="guideResources">Recursos</label>
+                                <div id="guideResources" class="guide-builder"></div>
+                                <button type="button" class="small-button" id="addGuideResourceButton">Anadir recurso</button>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="primary-button" id="saveGuideButton">Publicar guía</button>
+                                <button type="button" class="ghost-button" id="resetGuideButton">Limpiar</button>
+                            </div>
+                        </form>
+
+                        <div id="guideList" class="guide-list"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="confirmOverlay" class="modal-overlay" hidden>
+        <section class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+            <div class="modal-symbol">!</div>
+            <div>
+                <h2 id="confirmTitle">Confirmar borrado</h2>
+                <p id="confirmMessage">Esta accion no se puede deshacer.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="ghost-button" id="confirmCancelButton">Cancelar</button>
+                <button type="button" class="danger-button" id="confirmAcceptButton">Borrar</button>
+            </div>
+        </section>
+    </div>
+
+    <div id="toast" class="toast" role="status"></div>
+    <script src="/app.js"></script>
+</body>
+</html>

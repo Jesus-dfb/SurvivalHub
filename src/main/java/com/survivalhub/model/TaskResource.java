@@ -1,0 +1,81 @@
+package com.survivalhub.model;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+
+@Entity
+@Table(name = "task_resources")
+public class TaskResource {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Long taskId;
+
+    private String name;
+
+    private int requiredQuantity;
+
+    private int collectedQuantity;
+
+    public TaskResource() {
+    }
+
+    public TaskResource(Long id, Long taskId, String name, int requiredQuantity, int collectedQuantity) {
+        this.id = id;
+        this.taskId = taskId;
+        this.name = name;
+        this.requiredQuantity = requiredQuantity;
+        this.collectedQuantity = collectedQuantity;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(Long taskId) {
+        this.taskId = taskId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getRequiredQuantity() {
+        return requiredQuantity;
+    }
+
+    public void setRequiredQuantity(int requiredQuantity) {
+        this.requiredQuantity = requiredQuantity;
+    }
+
+    public int getCollectedQuantity() {
+        return collectedQuantity;
+    }
+
+    public void setCollectedQuantity(int collectedQuantity) {
+        this.collectedQuantity = collectedQuantity;
+    }
+
+    @Transient
+    public boolean isCompleted() {
+        return collectedQuantity >= requiredQuantity;
+    }
+}
