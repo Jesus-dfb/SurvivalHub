@@ -18,7 +18,8 @@ const state = {
     presetGameFilter: "all",
     presetTypeFilter: "all",
     presetSort: "popular",
-    expandedGuideIds: new Set()
+    expandedGuideIds: new Set(),
+    draggedTaskId: null
 };
 
 const els = {
@@ -69,7 +70,6 @@ const els = {
     taskDescription: document.getElementById("taskDescription"),
     taskPriority: document.getElementById("taskPriority"),
     taskDueDate: document.getElementById("taskDueDate"),
-    taskCompleted: document.getElementById("taskCompleted"),
     taskFilter: document.getElementById("taskFilter"),
     taskList: document.getElementById("taskList"),
     selectedTaskTitle: document.getElementById("selectedTaskTitle"),
@@ -137,7 +137,9 @@ async function api(path, options = {}) {
     }
 
     if (!response.ok) {
-        throw new Error(`Error HTTP ${response.status}`);
+        const error = new Error(`Error HTTP ${response.status}`);
+        error.status = response.status;
+        throw error;
     }
 
     if (response.status === 204) {
@@ -346,6 +348,19 @@ function presetRatingText(guide) {
     }
 
     return `${ratingAverage.toFixed(1)} / 5 (${ratingCount})`;
+}
+
+function dragHandleIcon() {
+    return `
+        <svg viewBox="0 0 128 128" aria-hidden="true" focusable="false">
+            <circle cx="82" cy="30" r="4" fill="currentColor" stroke="currentColor" stroke-width="7"></circle>
+            <circle cx="82" cy="64" r="4" fill="currentColor" stroke="currentColor" stroke-width="7"></circle>
+            <circle cx="82" cy="98" r="4" fill="currentColor" stroke="currentColor" stroke-width="7"></circle>
+            <circle cx="46" cy="30" r="4" fill="currentColor" stroke="currentColor" stroke-width="7"></circle>
+            <circle cx="46" cy="64" r="4" fill="currentColor" stroke="currentColor" stroke-width="7"></circle>
+            <circle cx="46" cy="98" r="4" fill="currentColor" stroke="currentColor" stroke-width="7"></circle>
+        </svg>
+    `;
 }
 
 function presetCreatedAtValue(guide) {
@@ -731,19 +746,24 @@ function renderTasks() {
     }
 
     els.taskList.innerHTML = filteredTasks.map(task => {
+        const canDrag = state.taskFilter === "all";
         const selected = task.id === state.selectedTaskId ? " selected" : "";
         const statusClass = task.completed ? "" : " pending";
         const statusText = task.completed ? "Completada" : "Pendiente";
+        const completeText = task.completed ? "Reabrir" : "Completar";
         const priority = task.priority || "Media";
         const priorityClass = priority.toLowerCase() === "alta"
             ? "high"
             : priority.toLowerCase() === "baja" ? "low" : "medium";
 
         return `
-            <article class="item-card${selected}">
+            <article class="item-card task-card${selected}" data-task-card="${task.id}" draggable="${canDrag}">
                 <button type="button" class="task-select" data-select-task="${task.id}">
                     <div class="status-line">
-                        <strong>${escapeHtml(task.title)}</strong>
+                        <span class="task-title-line">
+                            ${canDrag ? `<span class="drag-handle" title="Arrastrar tarea">${dragHandleIcon()}</span>` : ""}
+                            <strong>${escapeHtml(task.title)}</strong>
+                        </span>
                         <span class="status-pill${statusClass}">${statusText}</span>
                     </div>
                     <p>${escapeHtml(task.description || "Sin descripcion")}</p>
@@ -753,6 +773,7 @@ function renderTasks() {
                     </div>
                 </button>
                 <div class="item-actions">
+                    <button type="button" class="small-button complete" data-toggle-task-completed="${task.id}">${completeText}</button>
                     <button type="button" class="small-button" data-edit-task="${task.id}">Editar</button>
                     <button type="button" class="small-button danger" data-delete-task="${task.id}">Borrar</button>
                 </div>
@@ -1037,7 +1058,6 @@ function resetTaskForm() {
     els.taskDescription.value = "";
     els.taskPriority.value = "Media";
     els.taskDueDate.value = "";
-    els.taskCompleted.checked = false;
 }
 
 function resetResourceForm() {
@@ -1101,6 +1121,76 @@ async function updateResourceQuantity(resourceId, field, value) {
         method: "PUT",
         body: body(payload)
     });
+}
+
+async function updateTaskCompleted(taskId, completed) {
+    const world = selectedWorld();
+    const task = state.tasks.find(item => item.id === taskId);
+
+    if (!world || !task) {
+        throw new Error("Tarea no disponible");
+    }
+
+    await api(`/worlds/${world.id}/tasks/${taskId}`, {
+        method: "PUT",
+        body: body({
+            title: task.title,
+            description: task.description || "",
+            priority: task.priority || "Media",
+            dueDate: task.dueDate || "",
+            completed
+        })
+    });
+}
+
+function getTaskCardAfterPointer(container, pointerY) {
+    const cards = [...container.querySelectorAll("[data-task-card]:not(.dragging)")];
+
+    return cards.reduce((closest, card) => {
+        const box = card.getBoundingClientRect();
+        const offset = pointerY - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+            return {
+                offset,
+                element: card
+            };
+        }
+
+        return closest;
+    }, {
+        offset: Number.NEGATIVE_INFINITY,
+        element: null
+    }).element;
+}
+
+async function saveTaskOrderFromDom() {
+    const world = selectedWorld();
+
+    if (!world || state.taskFilter !== "all") {
+        return;
+    }
+
+    const taskIds = [...els.taskList.querySelectorAll("[data-task-card]")]
+        .map(card => Number(card.dataset.taskCard));
+    const currentTaskIds = state.tasks.map(task => task.id);
+    const orderChanged = taskIds.some((taskId, index) => taskId !== currentTaskIds[index]);
+
+    if (!orderChanged) {
+        return;
+    }
+
+    try {
+        state.tasks = await api(`/worlds/${world.id}/tasks/order`, {
+            method: "PUT",
+            body: body(taskIds)
+        });
+        renderTasks();
+        showToast("Orden de tareas guardado");
+    } catch (error) {
+        showToast("No se pudo guardar el orden");
+        await loadSelectedWorld();
+    }
 }
 
 function bindEvents() {
@@ -1366,15 +1456,17 @@ function bindEvents() {
             return;
         }
 
+        const id = els.taskId.value;
+        const existingTask = id
+            ? state.tasks.find(task => task.id === Number(id))
+            : null;
         const payload = {
             title: els.taskTitle.value.trim(),
             description: els.taskDescription.value.trim(),
             priority: els.taskPriority.value,
             dueDate: els.taskDueDate.value,
-            completed: els.taskCompleted.checked
+            completed: existingTask ? existingTask.completed : false
         };
-
-        const id = els.taskId.value;
 
         try {
             if (id) {
@@ -1399,13 +1491,75 @@ function bindEvents() {
         renderTasks();
     });
 
+    els.taskList.addEventListener("dragstart", event => {
+        const card = event.target.closest("[data-task-card]");
+
+        if (!card || state.taskFilter !== "all") {
+            return;
+        }
+
+        state.draggedTaskId = Number(card.dataset.taskCard);
+        card.classList.add("dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", card.dataset.taskCard);
+    });
+
+    els.taskList.addEventListener("dragover", event => {
+        const draggingCard = els.taskList.querySelector(".dragging");
+
+        if (!draggingCard || state.taskFilter !== "all") {
+            return;
+        }
+
+        event.preventDefault();
+
+        const afterCard = getTaskCardAfterPointer(els.taskList, event.clientY);
+
+        if (afterCard === null) {
+            els.taskList.appendChild(draggingCard);
+        } else {
+            els.taskList.insertBefore(draggingCard, afterCard);
+        }
+    });
+
+    els.taskList.addEventListener("dragend", async event => {
+        const card = event.target.closest("[data-task-card]");
+
+        if (card) {
+            card.classList.remove("dragging");
+        }
+
+        state.draggedTaskId = null;
+        await saveTaskOrderFromDom();
+    });
+
     els.taskList.addEventListener("click", async event => {
         const selectButton = event.target.closest("[data-select-task]");
         const editButton = event.target.closest("[data-edit-task]");
         const deleteButton = event.target.closest("[data-delete-task]");
+        const completeButton = event.target.closest("[data-toggle-task-completed]");
         const world = selectedWorld();
 
         if (!world) {
+            return;
+        }
+
+        if (completeButton) {
+            const taskId = Number(completeButton.dataset.toggleTaskCompleted);
+            const task = state.tasks.find(item => item.id === taskId);
+
+            if (!task) {
+                return;
+            }
+
+            try {
+                await updateTaskCompleted(taskId, !task.completed);
+                showToast(task.completed ? "Tarea reabierta" : "Tarea completada");
+                await loadSelectedWorld();
+            } catch (error) {
+                showToast("No se pudo actualizar la tarea");
+            }
+
             return;
         }
 
@@ -1424,7 +1578,6 @@ function bindEvents() {
             els.taskDescription.value = task.description || "";
             els.taskPriority.value = task.priority || "Media";
             els.taskDueDate.value = task.dueDate || "";
-            els.taskCompleted.checked = task.completed;
             return;
         }
 
@@ -1765,6 +1918,31 @@ function bindEvents() {
                 return;
             }
 
+            const duplicateTask = state.selectedWorldId === world.id
+                ? state.tasks.find(task => normalizedText(task.title) === normalizedText(guide ? guide.title : ""))
+                : null;
+
+            if (duplicateTask) {
+                const goToTask = await askConfirmation(
+                    "Tarea ya existente",
+                    `El mundo "${world.name}" ya tiene una tarea llamada "${duplicateTask.title}". No se creara otra copia.`,
+                    "Ver tarea"
+                );
+
+                if (goToTask) {
+                    state.selectedWorldId = world.id;
+                    state.selectedTaskId = duplicateTask.id;
+                    resetTaskForm();
+                    resetResourceForm();
+                    await loadSelectedWorld();
+                    renderWorlds();
+                    setView("worlds");
+                    showToast("Tarea existente seleccionada");
+                }
+
+                return;
+            }
+
             const resourceCount = guide && guide.resources ? guide.resources.length : 0;
             const confirmed = await askConfirmation(
                 "Anadir guia al mundo",
@@ -1788,7 +1966,11 @@ function bindEvents() {
                 setView("worlds");
                 showToast(`Guia "${guide ? guide.title : "seleccionada"}" anadida a ${world.name}`);
             } catch (error) {
-                showToast("No se pudo anadir la guia");
+                if (error.status === 409) {
+                    showToast("Ese mundo ya tiene una tarea con el mismo titulo");
+                } else {
+                    showToast("No se pudo anadir la guia");
+                }
             }
         }
     });

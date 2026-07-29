@@ -334,6 +334,12 @@ textarea {
     border-color: #356b49;
 }
 
+.small-button.complete {
+    color: #a8e9bf;
+    background: #1d3526;
+    border-color: #356b49;
+}
+
 .section-heading {
     display: flex;
     justify-content: space-between;
@@ -880,6 +886,48 @@ textarea {
     gap: 10px;
 }
 
+.task-card[draggable="true"] {
+    cursor: grab;
+}
+
+.task-card.dragging {
+    opacity: 0.55;
+    border-color: var(--green);
+}
+
+.task-title-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.drag-handle {
+    width: 22px;
+    height: 22px;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    background: var(--surface-muted);
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.drag-handle svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+}
+
+.task-card[draggable="true"]:hover .drag-handle {
+    color: #a8e9bf;
+    border-color: var(--green);
+}
+
 .task-select {
     border: 0;
     background: transparent;
@@ -983,18 +1031,6 @@ textarea {
 
 .item-card .meta-chip.low {
     color: var(--blue);
-}
-
-.checkbox-line {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 700;
-}
-
-.checkbox-line input {
-    width: 18px;
-    height: 18px;
 }
 
 .progress-block {
