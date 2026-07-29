@@ -36,6 +36,7 @@
             <nav class="app-nav" aria-label="Navegacion principal">
                 <button type="button" class="nav-button active" id="worldsNavButton">Mundos</button>
                 <button type="button" class="nav-button" id="presetsNavButton">Biblioteca</button>
+                <button type="button" class="nav-button" id="profileNavButton">Perfil</button>
             </nav>
 
             <form id="worldForm" class="panel-form">
@@ -134,6 +135,29 @@
                     </div>
                 </section>
 
+                <section class="dashboard-insights">
+                    <article class="insight-card">
+                        <span>Pendientes</span>
+                        <strong id="pendingTaskInsight">0</strong>
+                        <p>Objetivos activos</p>
+                    </article>
+                    <article class="insight-card">
+                        <span>Completadas</span>
+                        <strong id="completedTaskInsight">0</strong>
+                        <p>Tareas cerradas</p>
+                    </article>
+                    <article class="insight-card">
+                        <span>Prioridad alta</span>
+                        <strong id="highPriorityInsight">0</strong>
+                        <p>Necesitan atencion</p>
+                    </article>
+                    <article class="insight-card focus">
+                        <span>Siguiente foco</span>
+                        <strong id="nextFocusInsight">Sin tareas</strong>
+                        <p>Primera tarea pendiente</p>
+                    </article>
+                </section>
+
                 <div class="content-grid">
                     <section class="panel">
                         <div class="panel-title">
@@ -163,14 +187,11 @@
                             <input type="hidden" id="taskId">
                             <input id="taskTitle" type="text" placeholder="Título" required>
                             <textarea id="taskDescription" rows="3" placeholder="Descripción"></textarea>
-                            <div class="split-fields">
-                                <select id="taskPriority" aria-label="Prioridad">
-                                    <option value="Alta">Alta</option>
-                                    <option value="Media">Media</option>
-                                    <option value="Baja">Baja</option>
-                                </select>
-                                <input id="taskDueDate" type="date" aria-label="Fecha objetivo">
-                            </div>
+                            <select id="taskPriority" aria-label="Prioridad">
+                                <option value="Alta">Alta</option>
+                                <option value="Media">Media</option>
+                                <option value="Baja">Baja</option>
+                            </select>
                             <button type="submit" class="primary-button">Guardar tarea</button>
                         </form>
                         <div id="taskList" class="item-list"></div>
@@ -221,6 +242,67 @@
                         <div id="resourceList" class="item-list resource-list"></div>
                     </section>
                 </div>
+            </div>
+
+            <div class="view" id="profileView" hidden>
+                <section class="profile-header">
+                    <div>
+                        <p class="eyebrow">Perfil</p>
+                        <h2 id="profileDisplayName">Usuario</h2>
+                        <p id="profileAccountInfo">Resumen de tu actividad en Survival Hub.</p>
+                    </div>
+                </section>
+
+                <section class="profile-metrics">
+                    <article class="metric">
+                        <span>Mundos</span>
+                        <strong id="profileWorldCount">0</strong>
+                    </article>
+                    <article class="metric">
+                        <span>Guias publicadas</span>
+                        <strong id="profileGuideCount">0</strong>
+                    </article>
+                    <article class="metric">
+                        <span>Guardadas</span>
+                        <strong id="profileFavoriteCount">0</strong>
+                    </article>
+                    <article class="metric">
+                        <span>Votos</span>
+                        <strong id="profileVoteCount">0</strong>
+                    </article>
+                </section>
+
+                <section class="profile-grid">
+                    <article class="panel">
+                        <div class="panel-title">
+                            <div>
+                                <h3>Tus mundos</h3>
+                                <p>Servidores y partidas que gestionas.</p>
+                            </div>
+                        </div>
+                        <div id="profileWorldList" class="profile-list"></div>
+                    </article>
+
+                    <article class="panel">
+                        <div class="panel-title">
+                            <div>
+                                <h3>Tus guias</h3>
+                                <p>Contenido que has publicado en la biblioteca.</p>
+                            </div>
+                        </div>
+                        <div id="profileGuideList" class="profile-list"></div>
+                    </article>
+
+                    <article class="panel">
+                        <div class="panel-title">
+                            <div>
+                                <h3>Guardadas</h3>
+                                <p>Guias marcadas para reutilizar.</p>
+                            </div>
+                        </div>
+                        <div id="profileFavoriteList" class="profile-list"></div>
+                    </article>
+                </section>
             </div>
 
             <div class="view" id="presetsView" hidden>

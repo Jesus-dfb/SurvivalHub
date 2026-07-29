@@ -24,8 +24,6 @@ public class Task {
 
     private String priority;
 
-    private String dueDate;
-
     private boolean completed;
 
     private Integer sortOrder;
@@ -39,7 +37,6 @@ public class Task {
             String title,
             String description,
             String priority,
-            String dueDate,
             boolean completed
     ) {
         this.id = id;
@@ -47,7 +44,6 @@ public class Task {
         this.title = title;
         this.description = description;
         this.priority = priority;
-        this.dueDate = dueDate;
         this.completed = completed;
         this.sortOrder = 0;
     }
@@ -90,14 +86,6 @@ public class Task {
 
     public void setPriority(String priority) {
         this.priority = priority;
-    }
-
-    public String getDueDate() {
-        return dueDate;
-    }
-
-    public void setDueDate(String dueDate) {
-        this.dueDate = dueDate;
     }
 
     public boolean isCompleted() {

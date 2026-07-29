@@ -211,7 +211,6 @@ public class GuideController {
                 guide.getTitle(),
                 buildTaskDescription(guide),
                 "Media",
-                "",
                 false
         );
         Task createdTask = taskService.createTask(worldId, task);

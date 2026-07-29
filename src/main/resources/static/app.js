@@ -39,9 +39,11 @@ const els = {
     logoutButton: document.getElementById("logoutButton"),
     worldsNavButton: document.getElementById("worldsNavButton"),
     presetsNavButton: document.getElementById("presetsNavButton"),
+    profileNavButton: document.getElementById("profileNavButton"),
     authView: document.getElementById("authView"),
     worldsView: document.getElementById("worldsView"),
     presetsView: document.getElementById("presetsView"),
+    profileView: document.getElementById("profileView"),
     worldForm: document.getElementById("worldForm"),
     worldId: document.getElementById("worldId"),
     worldName: document.getElementById("worldName"),
@@ -59,6 +61,15 @@ const els = {
     taskMetric: document.getElementById("taskMetric"),
     resourceMetric: document.getElementById("resourceMetric"),
     progressMetric: document.getElementById("progressMetric"),
+    profileDisplayName: document.getElementById("profileDisplayName"),
+    profileAccountInfo: document.getElementById("profileAccountInfo"),
+    profileWorldCount: document.getElementById("profileWorldCount"),
+    profileGuideCount: document.getElementById("profileGuideCount"),
+    profileFavoriteCount: document.getElementById("profileFavoriteCount"),
+    profileVoteCount: document.getElementById("profileVoteCount"),
+    profileWorldList: document.getElementById("profileWorldList"),
+    profileGuideList: document.getElementById("profileGuideList"),
+    profileFavoriteList: document.getElementById("profileFavoriteList"),
     memberForm: document.getElementById("memberForm"),
     memberId: document.getElementById("memberId"),
     memberName: document.getElementById("memberName"),
@@ -69,10 +80,13 @@ const els = {
     taskTitle: document.getElementById("taskTitle"),
     taskDescription: document.getElementById("taskDescription"),
     taskPriority: document.getElementById("taskPriority"),
-    taskDueDate: document.getElementById("taskDueDate"),
     taskFilter: document.getElementById("taskFilter"),
     taskList: document.getElementById("taskList"),
     selectedTaskTitle: document.getElementById("selectedTaskTitle"),
+    pendingTaskInsight: document.getElementById("pendingTaskInsight"),
+    completedTaskInsight: document.getElementById("completedTaskInsight"),
+    highPriorityInsight: document.getElementById("highPriorityInsight"),
+    nextFocusInsight: document.getElementById("nextFocusInsight"),
     resourceForm: document.getElementById("resourceForm"),
     resourceId: document.getElementById("resourceId"),
     resourceName: document.getElementById("resourceName"),
@@ -229,11 +243,14 @@ function setView(view) {
     els.authView.hidden = view !== "auth";
     els.worldsView.hidden = view !== "worlds";
     els.presetsView.hidden = view !== "presets";
+    els.profileView.hidden = view !== "profile";
     els.authView.classList.toggle("active-view", view === "auth");
     els.worldsView.classList.toggle("active-view", view === "worlds");
     els.presetsView.classList.toggle("active-view", view === "presets");
+    els.profileView.classList.toggle("active-view", view === "profile");
     els.worldsNavButton.classList.toggle("active", view === "worlds");
     els.presetsNavButton.classList.toggle("active", view === "presets");
+    els.profileNavButton.classList.toggle("active", view === "profile");
 }
 
 function showAuthView(mode = "login") {
@@ -568,11 +585,13 @@ async function loadSelectedTaskResources() {
 function renderAll() {
     renderWorldHeader();
     renderMetrics();
+    renderDashboardInsights();
     renderMembers();
     renderTasks();
     renderResources();
     renderPresetWorldSelect();
     renderUsers();
+    renderProfile();
     renderPresetFilters();
     renderGuides();
     setResourceFormEnabled(Boolean(selectedTask()));
@@ -650,6 +669,61 @@ function renderUsers() {
     }
 }
 
+function renderProfile() {
+    const user = activeUser();
+
+    if (!user) {
+        els.profileDisplayName.textContent = "Sesion no iniciada";
+        els.profileAccountInfo.textContent = "Inicia sesion para ver tu perfil.";
+        els.profileWorldCount.textContent = "0";
+        els.profileGuideCount.textContent = "0";
+        els.profileFavoriteCount.textContent = "0";
+        els.profileVoteCount.textContent = "0";
+        els.profileWorldList.innerHTML = `<div class="empty-state">Inicia sesion</div>`;
+        els.profileGuideList.innerHTML = `<div class="empty-state">Inicia sesion</div>`;
+        els.profileFavoriteList.innerHTML = `<div class="empty-state">Inicia sesion</div>`;
+        return;
+    }
+
+    const ownedGuides = state.guides.filter(isGuideFromActiveUser);
+    const favoriteGuides = state.guides.filter(guide => guide.favoriteByCurrentUser);
+    const votedGuides = state.guides.filter(guide => Number(guide.currentUserRating || 0) > 0);
+
+    els.profileDisplayName.textContent = activeUserName();
+    els.profileAccountInfo.textContent = `${user.username}${user.email ? ` · ${user.email}` : ""}`;
+    els.profileWorldCount.textContent = state.worlds.length;
+    els.profileGuideCount.textContent = ownedGuides.length;
+    els.profileFavoriteCount.textContent = favoriteGuides.length;
+    els.profileVoteCount.textContent = votedGuides.length;
+
+    els.profileWorldList.innerHTML = state.worlds.length > 0
+        ? state.worlds.map(world => `
+            <button type="button" class="profile-list-item" data-profile-world="${world.id}">
+                <strong>${escapeHtml(world.name)}</strong>
+                <span>${escapeHtml(world.game)}</span>
+            </button>
+        `).join("")
+        : `<div class="empty-state">Todavia no tienes mundos</div>`;
+
+    els.profileGuideList.innerHTML = ownedGuides.length > 0
+        ? ownedGuides.map(guide => `
+            <button type="button" class="profile-list-item" data-profile-guide="${guide.id}">
+                <strong>${escapeHtml(guide.title)}</strong>
+                <span>${escapeHtml(guide.game)} · ${presetRatingText(guide)}</span>
+            </button>
+        `).join("")
+        : `<div class="empty-state">Todavia no has publicado guias</div>`;
+
+    els.profileFavoriteList.innerHTML = favoriteGuides.length > 0
+        ? favoriteGuides.map(guide => `
+            <button type="button" class="profile-list-item" data-profile-guide="${guide.id}">
+                <strong>${escapeHtml(guide.title)}</strong>
+                <span>${escapeHtml(guide.game)} · ${guide.importCount || 0} importaciones</span>
+            </button>
+        `).join("")
+        : `<div class="empty-state">No tienes guias guardadas</div>`;
+}
+
 function renderPresetFilters() {
     const games = [...new Set(state.guides.map(guide => guide.game).filter(Boolean))].sort();
     const types = [...new Set(state.guides.map(guide => guide.type).filter(Boolean))].sort();
@@ -695,6 +769,18 @@ function renderMetrics() {
     els.taskMetric.textContent = dashboard.taskCount;
     els.resourceMetric.textContent = dashboard.resourceCount;
     els.progressMetric.textContent = `${dashboard.averageTaskProgress}%`;
+}
+
+function renderDashboardInsights() {
+    const pendingTasks = state.tasks.filter(task => !task.completed);
+    const completedTasks = state.tasks.filter(task => task.completed);
+    const highPriorityTasks = pendingTasks.filter(task => normalizedText(task.priority) === "alta");
+    const nextFocusTask = highPriorityTasks[0] || pendingTasks[0] || null;
+
+    els.pendingTaskInsight.textContent = pendingTasks.length;
+    els.completedTaskInsight.textContent = completedTasks.length;
+    els.highPriorityInsight.textContent = highPriorityTasks.length;
+    els.nextFocusInsight.textContent = nextFocusTask ? nextFocusTask.title : "Sin tareas";
 }
 
 function renderMembers() {
@@ -769,7 +855,6 @@ function renderTasks() {
                     <p>${escapeHtml(task.description || "Sin descripcion")}</p>
                     <div class="meta-row">
                         <span class="meta-chip ${priorityClass}">${escapeHtml(priority)}</span>
-                        <span class="meta-chip">${escapeHtml(task.dueDate || "Sin fecha")}</span>
                     </div>
                 </button>
                 <div class="item-actions">
@@ -1057,7 +1142,6 @@ function resetTaskForm() {
     els.taskTitle.value = "";
     els.taskDescription.value = "";
     els.taskPriority.value = "Media";
-    els.taskDueDate.value = "";
 }
 
 function resetResourceForm() {
@@ -1133,13 +1217,12 @@ async function updateTaskCompleted(taskId, completed) {
 
     await api(`/worlds/${world.id}/tasks/${taskId}`, {
         method: "PUT",
-        body: body({
-            title: task.title,
-            description: task.description || "",
-            priority: task.priority || "Media",
-            dueDate: task.dueDate || "",
-            completed
-        })
+            body: body({
+                title: task.title,
+                description: task.description || "",
+                priority: task.priority || "Media",
+                completed
+            })
     });
 }
 
@@ -1257,6 +1340,51 @@ function bindEvents() {
         setView("presets");
         renderPresetWorldSelect();
         renderPresetFilters();
+        renderGuides();
+    });
+
+    els.profileNavButton.addEventListener("click", () => {
+        renderProfile();
+        setView("profile");
+    });
+
+    els.profileWorldList.addEventListener("click", async event => {
+        const button = event.target.closest("[data-profile-world]");
+
+        if (!button) {
+            return;
+        }
+
+        state.selectedWorldId = Number(button.dataset.profileWorld);
+        state.selectedTaskId = null;
+        resetTaskForm();
+        resetResourceForm();
+        renderWorlds();
+        await loadSelectedWorld();
+        setView("worlds");
+    });
+
+    els.profileGuideList.addEventListener("click", event => {
+        const button = event.target.closest("[data-profile-guide]");
+
+        if (!button) {
+            return;
+        }
+
+        state.expandedGuideIds.add(Number(button.dataset.profileGuide));
+        setView("presets");
+        renderGuides();
+    });
+
+    els.profileFavoriteList.addEventListener("click", event => {
+        const button = event.target.closest("[data-profile-guide]");
+
+        if (!button) {
+            return;
+        }
+
+        state.expandedGuideIds.add(Number(button.dataset.profileGuide));
+        setView("presets");
         renderGuides();
     });
 
@@ -1464,7 +1592,6 @@ function bindEvents() {
             title: els.taskTitle.value.trim(),
             description: els.taskDescription.value.trim(),
             priority: els.taskPriority.value,
-            dueDate: els.taskDueDate.value,
             completed: existingTask ? existingTask.completed : false
         };
 
@@ -1577,7 +1704,6 @@ function bindEvents() {
             els.taskTitle.value = task.title;
             els.taskDescription.value = task.description || "";
             els.taskPriority.value = task.priority || "Media";
-            els.taskDueDate.value = task.dueDate || "";
             return;
         }
 
@@ -2015,6 +2141,11 @@ function showLoggedOutState() {
     els.taskMetric.textContent = "0";
     els.resourceMetric.textContent = "0";
     els.progressMetric.textContent = "0%";
+    els.pendingTaskInsight.textContent = "0";
+    els.completedTaskInsight.textContent = "0";
+    els.highPriorityInsight.textContent = "0";
+    els.nextFocusInsight.textContent = "Sin tareas";
+    renderProfile();
     els.presetCount.textContent = "0";
     showAuthView("login");
 }
