@@ -137,7 +137,6 @@ public class DataInitializer implements CommandLineRunner {
                 "Construir granja de hierro",
                 "Reunir materiales y montar una granja automatica de hierro",
                 "Alta",
-                "2026-07-10",
                 false
         ));
 
@@ -147,7 +146,6 @@ public class DataInitializer implements CommandLineRunner {
                 "Crear zona de almacenamiento",
                 "Organizar cofres por tipo de recurso en la base principal",
                 "Media",
-                "2026-07-14",
                 false
         ));
 
@@ -157,7 +155,6 @@ public class DataInitializer implements CommandLineRunner {
                 "Preparar portal del Nether",
                 "Buscar obsidiana y proteger la entrada al Nether",
                 "Baja",
-                "2026-07-05",
                 true
         ));
 
@@ -167,7 +164,6 @@ public class DataInitializer implements CommandLineRunner {
                 "Derrotar al primer boss",
                 "Preparar comida, armas y armaduras para el combate",
                 "Alta",
-                "2026-07-18",
                 false
         ));
 

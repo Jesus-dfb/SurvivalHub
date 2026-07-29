@@ -413,8 +413,12 @@ textarea {
 
 .world-header,
 .presets-header,
+.profile-header,
 .metrics-grid,
+.profile-metrics,
+.dashboard-insights,
 .content-grid,
+.profile-grid,
 .guide-panel {
     width: min(1180px, 100%);
 }
@@ -426,12 +430,16 @@ textarea {
 
 .world-header,
 .metrics-grid,
+.profile-header,
+.profile-metrics,
+.dashboard-insights,
 .content-grid {
     width: 100%;
 }
 
 .world-header,
-.presets-header {
+.presets-header,
+.profile-header {
     background: var(--surface);
     border-bottom: 3px solid #d9b36a;
     box-shadow: var(--shadow);
@@ -444,7 +452,8 @@ textarea {
 }
 
 .world-header h2,
-.presets-header h2 {
+.presets-header h2,
+.profile-header h2 {
     font-size: 30px;
     margin: 3px 0 8px;
 }
@@ -469,7 +478,8 @@ textarea {
     margin-top: 6px;
 }
 
-.metrics-grid {
+.metrics-grid,
+.profile-metrics {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 12px;
@@ -499,10 +509,91 @@ textarea {
     font-size: 28px;
 }
 
+.dashboard-insights {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.insight-card {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+}
+
+.insight-card span,
+.insight-card p {
+    color: var(--muted);
+}
+
+.insight-card span {
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.insight-card strong {
+    color: var(--text);
+    font-size: 22px;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+}
+
+.insight-card p {
+    margin: 0;
+    font-size: 13px;
+}
+
+.insight-card.focus {
+    border-color: #d9b36a;
+    background: #222319;
+}
+
 .content-grid {
     display: grid;
     grid-template-columns: minmax(260px, 0.8fr) minmax(320px, 1fr) minmax(420px, 1.25fr);
     gap: 14px;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+    gap: 14px;
+    width: 100%;
+}
+
+.profile-list {
+    display: grid;
+    gap: 10px;
+}
+
+.profile-list-item {
+    width: 100%;
+    display: grid;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-muted);
+    color: var(--text);
+    text-align: left;
+}
+
+.profile-list-item strong {
+    display: block;
+}
+
+.profile-list-item span {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.profile-list-item:hover {
+    border-color: var(--green);
 }
 
 .panel {
@@ -1168,6 +1259,10 @@ textarea {
         grid-template-columns: 1fr;
     }
 
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
     .presets-header {
         display: grid;
     }
@@ -1202,6 +1297,14 @@ textarea {
     }
 
     .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .profile-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-insights {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -1278,5 +1381,13 @@ textarea {
 
     .guide-card .item-actions {
         justify-content: flex-start;
+    }
+}
+
+@media (max-width: 520px) {
+    .dashboard-insights,
+    .metrics-grid,
+    .profile-metrics {
+        grid-template-columns: 1fr;
     }
 }

@@ -1,93 +1,133 @@
 # Survival Hub
 
-Survival Hub es una aplicacion web sencilla para gestionar mundos o servidores survival con amigos.
+Survival Hub es una aplicacion web para gestionar mundos o servidores de juegos survival con amigos.
 
-Permite trabajar con:
+El proyecto esta pensado como portfolio junior: combina backend REST con Spring Boot, persistencia en PostgreSQL, autenticacion con JWT y un frontend sencillo servido desde la propia aplicacion.
 
-- mundos privados por usuario;
-- miembros;
-- tareas;
-- recursos necesarios para cada tarea;
-- progreso de recursos calculado automaticamente;
-- biblioteca online simulada para anadir guias a un mundo;
-- login con token para publicar y votar guias.
+## Funcionalidades
 
-La aplicacion ya usa PostgreSQL mediante Spring Data JPA. Los datos se guardan en base de datos local.
+- Registro e inicio de sesion.
+- Mundos privados por usuario.
+- Miembros por mundo.
+- Tareas por mundo.
+- Recursos por tarea con cantidad necesaria y cantidad conseguida.
+- Progreso calculado automaticamente.
+- Boton directo para completar o reabrir tareas.
+- Orden manual de tareas con arrastrar y soltar.
+- Dashboard del mundo con resumen de progreso.
+- Biblioteca de guias compartidas.
+- Creacion de guias con pasos, recursos y video opcional.
+- Favoritos y valoraciones de guias.
+- Importacion de guias a un mundo como tareas con recursos.
+- Bloqueo de importaciones duplicadas.
+- Perfil del usuario con resumen de mundos, guias publicadas y guias guardadas.
 
 ## Stack
 
-- Java
+- Java 17
 - Spring Boot
 - Maven Wrapper
-- API REST
+- Spring Web
 - Spring Data JPA
 - Spring Security
-- PostgreSQL Driver
-- Lombok disponible, aunque el codigo principal usa getters y setters explicitos
-- HTML, CSS y JavaScript servidos desde Spring Boot
+- JWT
+- PostgreSQL
+- BCrypt
+- HTML, CSS y JavaScript
 
-## Arrancar el proyecto
+Lombok esta disponible como dependencia, pero el codigo principal mantiene getters, setters y constructores explicitos para facilitar el aprendizaje.
 
-Antes de arrancar, crea una base de datos PostgreSQL llamada:
+## Arrancar en local
+
+### 1. Crear base de datos
+
+Crea una base de datos PostgreSQL llamada:
 
 ```text
 survival_hub
 ```
 
-Por defecto la aplicacion intenta conectar con:
+### 2. Configurar credenciales
 
-```properties
-DB_URL=jdbc:postgresql://localhost:5432/survival_hub
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
-```
+La aplicacion lee variables de entorno o un archivo local opcional.
 
-Si tu usuario o password son distintos, puedes cambiarlos en PowerShell antes de arrancar:
-
-```powershell
-$env:DB_USERNAME="postgres"
-$env:DB_PASSWORD="tu_password"
-$env:DB_URL="jdbc:postgresql://localhost:5432/survival_hub"
-```
-
-Tambien puedes crear un archivo local en la raiz del proyecto llamado:
+Puedes crear en la raiz del proyecto:
 
 ```text
 application-local.properties
 ```
 
-Con este contenido:
+Con este formato:
 
 ```properties
 DB_URL=jdbc:postgresql://localhost:5432/survival_hub
 DB_USERNAME=postgres
-DB_PASSWORD=tu_password_real_de_postgres
-JWT_SECRET=una-clave-local-larga-para-desarrollo
+DB_PASSWORD=tu_password_de_postgres
+JWT_SECRET=cambia-esta-clave-local-por-una-frase-larga
 ```
 
-Este archivo esta ignorado por Git para no subir tu contrasena. Hay una plantilla en `application-local.example.properties`.
+El archivo `application-local.properties` no debe subirse a Git. Usa `application-local.example.properties` como plantilla.
 
-Desde la carpeta del proyecto:
+Tambien puedes usar variables de entorno:
+
+```powershell
+$env:DB_URL="jdbc:postgresql://localhost:5432/survival_hub"
+$env:DB_USERNAME="postgres"
+$env:DB_PASSWORD="tu_password_de_postgres"
+$env:JWT_SECRET="una-clave-local-larga"
+```
+
+### 3. Ejecutar
+
+Desde la raiz del proyecto:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-Abrir:
+Abrir en el navegador:
 
 ```text
 http://localhost:8080/
 ```
 
-La pantalla principal tiene dos apartados:
-
-- `Mundos`: gestion de mundos, miembros, tareas y recursos.
-- `Biblioteca`: zona simulada donde se publican guias reutilizables con un usuario activo.
-
 Endpoint de salud:
 
 ```text
-http://localhost:8080/api/health
+GET http://localhost:8080/api/health
+```
+
+## Usuarios de demo
+
+Al arrancar por primera vez se crean usuarios de ejemplo:
+
+```text
+alexcraft / password123
+lunasurvival / password123
+survivalfan / password123
+```
+
+Las contrasenas se guardan cifradas con BCrypt.
+
+## Estructura principal
+
+```text
+src/main/java/com/survivalhub
+|-- config
+|-- controller
+|-- model
+|-- repository
+|-- service
+`-- SurvivalHubApplication.java
+```
+
+El frontend esta en:
+
+```text
+src/main/resources/static
+|-- index.html
+|-- app.js
+`-- styles.css
 ```
 
 ## Endpoints principales
@@ -100,21 +140,11 @@ POST /api/auth/login
 GET  /api/auth/me
 ```
 
-El registro y el login devuelven un token. El frontend lo guarda en el navegador y lo envia en cada peticion protegida con:
+El login devuelve un token JWT. El frontend lo guarda en `localStorage` y lo envia en cada peticion protegida:
 
 ```text
-Authorization: Bearer token
+Authorization: Bearer <token>
 ```
-
-Usuarios de demo:
-
-```text
-alexcraft / password123
-lunasurvival / password123
-survivalfan / password123
-```
-
-Si esos usuarios ya existian antes sin contrasena, la aplicacion les asigna `password123` al arrancar.
 
 ### Mundos
 
@@ -126,7 +156,7 @@ PUT    /api/worlds/{id}
 DELETE /api/worlds/{id}
 ```
 
-Cada usuario autenticado ve solo sus propios mundos. Al crear un mundo, la API lo asocia automaticamente al usuario del token. Los mundos antiguos sin propietario se asignan a `alexcraft` durante el arranque para conservar los datos de demo.
+Cada usuario ve solo sus propios mundos.
 
 ### Miembros
 
@@ -146,6 +176,7 @@ GET    /api/worlds/{worldId}/tasks/{taskId}
 GET    /api/worlds/{worldId}/tasks/{taskId}/summary
 POST   /api/worlds/{worldId}/tasks
 PUT    /api/worlds/{worldId}/tasks/{taskId}
+PUT    /api/worlds/{worldId}/tasks/order
 DELETE /api/worlds/{worldId}/tasks/{taskId}
 ```
 
@@ -154,8 +185,8 @@ Las tareas incluyen:
 - titulo;
 - descripcion;
 - prioridad;
-- fecha objetivo;
-- estado completado.
+- estado completado;
+- orden manual dentro del mundo.
 
 ### Recursos
 
@@ -167,35 +198,29 @@ PUT    /api/worlds/{worldId}/tasks/{taskId}/resources/{resourceId}
 DELETE /api/worlds/{worldId}/tasks/{taskId}/resources/{resourceId}
 ```
 
+Un recurso se considera completado cuando:
+
+```java
+collectedQuantity >= requiredQuantity
+```
+
+Ese estado se calcula automaticamente en el modelo `TaskResource`.
+
 ### Dashboard
 
 ```text
 GET /api/worlds/{worldId}/dashboard
 ```
 
-Devuelve un resumen del mundo:
+Devuelve resumen del mundo:
 
-- numero de miembros;
-- numero de tareas;
-- tareas completadas y pendientes;
-- recursos totales;
+- miembros;
+- tareas;
+- tareas completadas;
+- tareas pendientes;
+- recursos;
 - recursos completados;
-- progreso medio de tareas.
-
-### Usuarios
-
-```text
-GET /api/users
-```
-
-Los usuarios ya se guardan en base de datos y tienen contrasena cifrada con BCrypt. La pantalla usa el usuario autenticado, no un selector manual.
-
-Ese usuario se usa para:
-
-- publicar nuevas guias como autor;
-- votar guias;
-- actualizar un voto anterior si el mismo usuario vuelve a votar la misma guia;
-- filtrar la biblioteca por `Todas las guias` o `Mis guias`.
+- progreso medio.
 
 ### Biblioteca de guias
 
@@ -211,50 +236,46 @@ DELETE /api/guides/{id}/favorite
 POST   /api/guides/{guideId}/apply/worlds/{worldId}
 ```
 
-Una guia puede representar una ruta de progreso, una estructura, una farm o una guia de boss. Incluye:
+Una guia puede incluir:
 
 - titulo;
 - juego;
 - tipo;
 - autor;
 - dificultad;
+- descripcion;
+- video opcional;
+- pasos;
+- recursos necesarios;
 - valoracion media;
 - numero de votos;
-- numero de importaciones;
-- fecha de creacion;
-- descripcion;
-- enlace opcional a video;
-- pasos;
-- recursos necesarios.
+- numero de importaciones.
 
-Al anadir una guia a un mundo, la API crea automaticamente una tarea nueva y copia sus recursos con `collectedQuantity` en `0`.
+Al aplicar una guia a un mundo, se crea una tarea nueva y se copian sus recursos con cantidad conseguida en `0`.
 
-Las valoraciones se guardan en la tabla `guide_ratings`. Cada voto incluye:
+Si el mundo ya tiene una tarea con el mismo titulo que la guia, la API responde con `409 Conflict` para evitar duplicados.
 
-- guia votada;
-- nombre del usuario activo;
-- puntuacion de `1` a `5`;
-- fecha de creacion.
+### Usuarios
 
-Si el mismo usuario activo vota otra vez la misma guia, se actualiza su voto anterior. Despues se recalcula la media de la guia desde la tabla de votos.
-
-La biblioteca es compartida entre usuarios: todos pueden ver las guias publicadas. Publicar, votar y anadir guias al mundo requiere login. Editar o borrar una guia queda limitado al autor. Mas adelante podra tener favoritos, comentarios o moderacion.
-
-Cada usuario puede guardar guias como favoritas y filtrarlas desde la biblioteca con `Guardadas`.
-
-## Regla de progreso
-
-Un recurso se considera completado cuando:
-
-```java
-collectedQuantity >= requiredQuantity
+```text
+GET /api/users
 ```
 
-Ese estado no se guarda a mano. Se calcula en `TaskResource`.
+## Vistas del frontend
 
-## Nota sobre base de datos
+- **Mundos**: gestion de mundos, miembros, tareas y recursos.
+- **Biblioteca**: guias compartidas, favoritos, votos e importacion a mundos.
+- **Perfil**: resumen del usuario, mundos, guias publicadas y guardadas.
 
-La configuracion actual esta en `src/main/resources/application.properties`:
+## Notas de base de datos
+
+La configuracion base esta en:
+
+```text
+src/main/resources/application.properties
+```
+
+Configuracion relevante:
 
 ```properties
 spring.datasource.url=${DB_URL:jdbc:postgresql://localhost:5432/survival_hub}
@@ -262,8 +283,38 @@ spring.datasource.username=${DB_USERNAME:postgres}
 spring.datasource.password=${DB_PASSWORD:postgres}
 spring.jpa.hibernate.ddl-auto=update
 app.jwt.secret=${JWT_SECRET:survival-hub-local-dev-secret-change-me}
+server.port=${PORT:8080}
 ```
 
-`spring.jpa.hibernate.ddl-auto=update` permite que Hibernate cree o actualice las tablas durante el arranque. Es comodo para desarrollo, pero mas adelante se podria cambiar por migraciones con Flyway o Liquibase.
+`spring.jpa.hibernate.ddl-auto=update` es practico durante desarrollo. Para una version mas seria se podria sustituir por migraciones con Flyway o Liquibase.
 
-La clave JWT de desarrollo funciona en local. Para un despliegue real, define `JWT_SECRET` como variable de entorno con un valor largo y privado.
+## Tests
+
+El proyecto incluye una primera bateria sencilla de tests automatizados.
+
+Para ejecutarlos desde la raiz del proyecto:
+
+```powershell
+.\mvnw.cmd test
+```
+
+Los tests usan una base de datos H2 en memoria con el perfil `test`, asi que no modifican la base de datos PostgreSQL local.
+
+Actualmente se comprueba:
+
+- endpoint de salud;
+- registro e inicio de sesion;
+- privacidad de mundos por usuario;
+- bloqueo de importaciones duplicadas de guias;
+- calculo automatico de recurso completado.
+
+## Posibles mejoras futuras
+
+- Recuperacion de contrasena.
+- Edicion del perfil.
+- Comentarios en guias.
+- Moderacion de guias publicas.
+- Ampliar cobertura de tests para miembros, tareas, recursos y biblioteca.
+- Migraciones de base de datos.
+- Frontend separado en React.
+- Docker para levantar PostgreSQL y la app.
