@@ -200,6 +200,11 @@ public class GuideController {
         }
 
         Guide guide = guideOptional.get();
+
+        if (taskService.existsByWorldIdAndTitle(worldId, guide.getTitle())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
         Task task = new Task(
                 null,
                 worldId,

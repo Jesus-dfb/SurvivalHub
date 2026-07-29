@@ -28,6 +28,8 @@ public class Task {
 
     private boolean completed;
 
+    private Integer sortOrder;
+
     public Task() {
     }
 
@@ -47,6 +49,7 @@ public class Task {
         this.priority = priority;
         this.dueDate = dueDate;
         this.completed = completed;
+        this.sortOrder = 0;
     }
 
     public Long getId() {
@@ -103,5 +106,13 @@ public class Task {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    public int getSortOrder() {
+        return sortOrder == null ? 0 : sortOrder;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
     }
 }

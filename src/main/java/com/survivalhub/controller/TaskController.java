@@ -113,6 +113,21 @@ public class TaskController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping("/order")
+    public ResponseEntity<List<Task>> reorderTasks(
+            @PathVariable Long worldId,
+            @RequestBody List<Long> taskIds,
+            Authentication authentication
+    ) {
+        if (!canAccessWorld(worldId, authentication)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<Task> tasks = taskService.reorderTasks(worldId, taskIds);
+
+        return ResponseEntity.ok(tasks);
+    }
+
     @DeleteMapping("/{taskId}")
     public ResponseEntity<Void> deleteTask(
             @PathVariable Long worldId,
