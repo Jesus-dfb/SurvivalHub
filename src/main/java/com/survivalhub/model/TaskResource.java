@@ -23,6 +23,8 @@ public class TaskResource {
 
     private int collectedQuantity;
 
+    private Integer sortOrder;
+
     public TaskResource() {
     }
 
@@ -32,6 +34,7 @@ public class TaskResource {
         this.name = name;
         this.requiredQuantity = requiredQuantity;
         this.collectedQuantity = collectedQuantity;
+        this.sortOrder = 0;
     }
 
     public Long getId() {
@@ -72,6 +75,14 @@ public class TaskResource {
 
     public void setCollectedQuantity(int collectedQuantity) {
         this.collectedQuantity = collectedQuantity;
+    }
+
+    public int getSortOrder() {
+        return sortOrder == null ? 0 : sortOrder;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
     }
 
     @Transient

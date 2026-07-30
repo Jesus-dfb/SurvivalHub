@@ -239,6 +239,15 @@
                             <button type="submit" class="primary-button resource-save-button">Guardar recurso</button>
                         </form>
 
+                        <div class="resource-import-box">
+                            <div>
+                                <strong>Importar materiales</strong>
+                                <span>Sube una lista .txt con columnas Item, Total y Available.</span>
+                            </div>
+                            <label class="small-button import-file-button" for="resourceImportFile">Importar .txt</label>
+                            <input id="resourceImportFile" type="file" accept=".txt,text/plain" hidden>
+                        </div>
+
                         <div id="resourceList" class="item-list resource-list"></div>
                     </section>
                 </div>

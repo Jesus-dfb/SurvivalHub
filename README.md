@@ -194,6 +194,8 @@ Las tareas incluyen:
 GET    /api/worlds/{worldId}/tasks/{taskId}/resources
 GET    /api/worlds/{worldId}/tasks/{taskId}/resources/{resourceId}
 POST   /api/worlds/{worldId}/tasks/{taskId}/resources
+POST   /api/worlds/{worldId}/tasks/{taskId}/resources/import
+PUT    /api/worlds/{worldId}/tasks/{taskId}/resources/order
 PUT    /api/worlds/{worldId}/tasks/{taskId}/resources/{resourceId}
 DELETE /api/worlds/{worldId}/tasks/{taskId}/resources/{resourceId}
 ```
@@ -205,6 +207,10 @@ collectedQuantity >= requiredQuantity
 ```
 
 Ese estado se calcula automaticamente en el modelo `TaskResource`.
+
+La ruta de importacion permite subir un archivo `.txt` con una tabla de materiales. La app lee las columnas `Item`, `Total` y `Available`, y las convierte en recursos de la tarea seleccionada.
+
+Los recursos tambien tienen orden manual dentro de cada tarea y pueden moverse con arrastrar y soltar desde la interfaz.
 
 ### Dashboard
 
@@ -306,6 +312,7 @@ Actualmente se comprueba:
 - registro e inicio de sesion;
 - privacidad de mundos por usuario;
 - bloqueo de importaciones duplicadas de guias;
+- importacion de recursos desde archivo `.txt`;
 - calculo automatico de recurso completado.
 
 ## Posibles mejoras futuras

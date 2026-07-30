@@ -948,6 +948,39 @@ textarea {
     white-space: nowrap;
 }
 
+.resource-import-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.resource-import-box div {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+}
+
+.resource-import-box strong {
+    color: var(--text);
+    font-size: 14px;
+}
+
+.resource-import-box span {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.import-file-button {
+    cursor: pointer;
+    white-space: nowrap;
+}
+
 .resource-inline-edit {
     display: grid;
     grid-template-columns: repeat(2, minmax(110px, 1fr));
@@ -977,16 +1010,25 @@ textarea {
     gap: 10px;
 }
 
-.task-card[draggable="true"] {
+.task-card[draggable="true"],
+.resource-card[draggable="true"] {
     cursor: grab;
 }
 
-.task-card.dragging {
+.task-card.dragging,
+.resource-card.dragging {
     opacity: 0.55;
     border-color: var(--green);
 }
 
 .task-title-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.resource-title-line {
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -1014,7 +1056,8 @@ textarea {
     display: block;
 }
 
-.task-card[draggable="true"]:hover .drag-handle {
+.task-card[draggable="true"]:hover .drag-handle,
+.resource-card[draggable="true"]:hover .drag-handle {
     color: #a8e9bf;
     border-color: var(--green);
 }
@@ -1323,6 +1366,15 @@ textarea {
     .resource-save-button {
         width: 100%;
         justify-self: stretch;
+    }
+
+    .resource-import-box {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .import-file-button {
+        text-align: center;
     }
 
     .split-fields {

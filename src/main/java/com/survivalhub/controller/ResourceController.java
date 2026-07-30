@@ -1,10 +1,12 @@
 package com.survivalhub.controller;
 
 import com.survivalhub.model.AppUser;
+import com.survivalhub.model.ResourceImportResult;
 import com.survivalhub.model.TaskResource;
 import com.survivalhub.service.ResourceService;
 import com.survivalhub.service.TaskService;
 import com.survivalhub.service.WorldService;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,8 +17,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -90,6 +95,50 @@ public class ResourceController {
         TaskResource createdResource = resourceService.createResource(taskId, resource);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(createdResource);
+    }
+
+    @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ResourceImportResult> importResources(
+            @PathVariable Long worldId,
+            @PathVariable Long taskId,
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication
+    ) {
+        if (!canAccessWorld(worldId, authentication)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (taskService.getTaskById(worldId, taskId).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            ResourceImportResult result = resourceService.importResourcesFromMaterialList(taskId, file);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(result);
+        } catch (IllegalArgumentException | IOException exception) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/order")
+    public ResponseEntity<List<TaskResource>> reorderResources(
+            @PathVariable Long worldId,
+            @PathVariable Long taskId,
+            @RequestBody List<Long> resourceIds,
+            Authentication authentication
+    ) {
+        if (!canAccessWorld(worldId, authentication)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (taskService.getTaskById(worldId, taskId).isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        List<TaskResource> resources = resourceService.reorderResources(taskId, resourceIds);
+
+        return ResponseEntity.ok(resources);
     }
 
     @PutMapping("/{resourceId}")
