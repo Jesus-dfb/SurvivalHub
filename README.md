@@ -11,6 +11,7 @@ El proyecto esta pensado como portfolio junior: combina backend REST con Spring 
 - Miembros por mundo.
 - Tareas por mundo.
 - Recursos por tarea con cantidad necesaria y cantidad conseguida.
+- Tamano de stack y stacks necesarios calculados por recurso.
 - Progreso calculado automaticamente.
 - Boton directo para completar o reabrir tareas.
 - Orden manual de tareas con arrastrar y soltar.
@@ -208,6 +209,16 @@ collectedQuantity >= requiredQuantity
 
 Ese estado se calcula automaticamente en el modelo `TaskResource`.
 
+Cada recurso puede tener un tamano de stack. Con ese dato la API calcula automaticamente cuantos stacks completos y cuantos bloques sueltos hacen falta:
+
+```java
+requiredStacks = requiredQuantity / stackSize
+requiredLooseItems = requiredQuantity % stackSize
+```
+
+Ejemplo: `657` materiales con stack de `64` se muestran como `10 stacks y 17 bloques`.
+Si la cantidad no llega a completar un stack, se muestra `0`.
+
 La ruta de importacion permite subir un archivo `.txt` con una tabla de materiales. La app lee las columnas `Item`, `Total` y `Available`, y las convierte en recursos de la tarea seleccionada.
 
 Los recursos tambien tienen orden manual dentro de cada tarea y pueden moverse con arrastrar y soltar desde la interfaz.
@@ -313,6 +324,7 @@ Actualmente se comprueba:
 - privacidad de mundos por usuario;
 - bloqueo de importaciones duplicadas de guias;
 - importacion de recursos desde archivo `.txt`;
+- calculo de stacks necesarios por recurso;
 - calculo automatico de recurso completado.
 
 ## Posibles mejoras futuras

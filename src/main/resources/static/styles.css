@@ -936,7 +936,7 @@ textarea {
 }
 
 .resource-form {
-    grid-template-columns: minmax(150px, 1.2fr) minmax(96px, 0.8fr) minmax(96px, 0.8fr);
+    grid-template-columns: minmax(150px, 1.2fr) repeat(3, minmax(88px, 0.7fr));
     align-items: end;
     gap: 10px;
 }
@@ -983,26 +983,48 @@ textarea {
 
 .resource-inline-edit {
     display: grid;
-    grid-template-columns: repeat(2, minmax(110px, 1fr));
+    grid-template-columns: repeat(3, minmax(80px, 0.78fr)) minmax(130px, 1.1fr);
     gap: 10px;
 }
 
-.resource-inline-edit label {
+.resource-inline-edit label,
+.stack-summary {
     display: grid;
     gap: 5px;
     min-width: 0;
 }
 
-.resource-inline-edit span {
+.resource-inline-edit span,
+.stack-summary span {
     color: var(--muted);
     font-size: 12px;
     font-weight: 800;
     text-transform: uppercase;
 }
 
+.stack-summary span {
+    font-size: 12px;
+}
+
 .resource-inline-edit input {
     min-height: 38px;
     padding: 8px 10px;
+}
+
+.stack-summary {
+    align-self: stretch;
+}
+
+.stack-summary strong {
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #151914;
+    color: var(--text);
+    font-size: 15px;
 }
 
 .item-card {
@@ -1360,7 +1382,7 @@ textarea {
     }
 
     .resource-inline-edit {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .resource-save-button {

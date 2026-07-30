@@ -122,6 +122,10 @@ class SurvivalHubApplicationTests {
                 .andExpect(jsonPath("$.resources[0].name").value("Piedra"))
                 .andExpect(jsonPath("$.resources[0].requiredQuantity").value(100))
                 .andExpect(jsonPath("$.resources[0].collectedQuantity").value(20))
+                .andExpect(jsonPath("$.resources[0].stackSize").value(64))
+                .andExpect(jsonPath("$.resources[0].requiredStacks").value(1))
+                .andExpect(jsonPath("$.resources[0].requiredLooseItems").value(36))
+                .andExpect(jsonPath("$.resources[0].requiredStackSummary").value("1 stack y 36 bloques"))
                 .andExpect(jsonPath("$.resources[1].name").value("Botón de piedra"))
                 .andReturn();
 

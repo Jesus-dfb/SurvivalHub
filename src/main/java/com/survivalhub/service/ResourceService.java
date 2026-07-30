@@ -83,6 +83,10 @@ public class ResourceService {
         resource.setId(null);
         resource.setTaskId(taskId);
 
+        if (resource.getStackSize() <= 0) {
+            resource.setStackSize(64);
+        }
+
         if (resource.getSortOrder() <= 0) {
             resource.setSortOrder((int) taskResourceRepository.countByTaskId(taskId) + 1);
         }
@@ -165,6 +169,7 @@ public class ResourceService {
         resource.setName(updatedResource.getName());
         resource.setRequiredQuantity(updatedResource.getRequiredQuantity());
         resource.setCollectedQuantity(updatedResource.getCollectedQuantity());
+        resource.setStackSize(updatedResource.getStackSize());
 
         return Optional.of(taskResourceRepository.save(resource));
     }
@@ -247,6 +252,7 @@ public class ResourceService {
                     requiredQuantity,
                     collectedQuantity
             );
+            resource.setStackSize(64);
 
             return Optional.of(resource);
         } catch (NumberFormatException exception) {
