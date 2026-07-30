@@ -23,6 +23,8 @@ public class TaskResource {
 
     private int collectedQuantity;
 
+    private Integer stackSize;
+
     private Integer sortOrder;
 
     public TaskResource() {
@@ -34,6 +36,7 @@ public class TaskResource {
         this.name = name;
         this.requiredQuantity = requiredQuantity;
         this.collectedQuantity = collectedQuantity;
+        this.stackSize = 64;
         this.sortOrder = 0;
     }
 
@@ -77,6 +80,14 @@ public class TaskResource {
         this.collectedQuantity = collectedQuantity;
     }
 
+    public int getStackSize() {
+        return stackSize == null || stackSize <= 0 ? 64 : stackSize;
+    }
+
+    public void setStackSize(int stackSize) {
+        this.stackSize = stackSize;
+    }
+
     public int getSortOrder() {
         return sortOrder == null ? 0 : sortOrder;
     }
@@ -88,5 +99,45 @@ public class TaskResource {
     @Transient
     public boolean isCompleted() {
         return collectedQuantity >= requiredQuantity;
+    }
+
+    @Transient
+    public int getRequiredStacks() {
+        int currentStackSize = getStackSize();
+
+        if (requiredQuantity <= 0 || currentStackSize <= 0) {
+            return 0;
+        }
+
+        return requiredQuantity / currentStackSize;
+    }
+
+    @Transient
+    public int getRequiredLooseItems() {
+        int currentStackSize = getStackSize();
+
+        if (requiredQuantity <= 0 || currentStackSize <= 0) {
+            return 0;
+        }
+
+        return requiredQuantity % currentStackSize;
+    }
+
+    @Transient
+    public String getRequiredStackSummary() {
+        int stacks = getRequiredStacks();
+        int looseItems = getRequiredLooseItems();
+
+        if (stacks == 0) {
+            return "0";
+        }
+
+        if (looseItems == 0) {
+            return stacks == 1 ? "1 stack" : stacks + " stacks";
+        }
+
+        String stackText = stacks == 1 ? "1 stack" : stacks + " stacks";
+
+        return stackText + " y " + looseItems + " bloques";
     }
 }

@@ -93,6 +93,7 @@ const els = {
     resourceName: document.getElementById("resourceName"),
     requiredQuantity: document.getElementById("requiredQuantity"),
     collectedQuantity: document.getElementById("collectedQuantity"),
+    stackSize: document.getElementById("stackSize"),
     resourceList: document.getElementById("resourceList"),
     resourceFilter: document.getElementById("resourceFilter"),
     resourceImportFile: document.getElementById("resourceImportFile"),
@@ -929,6 +930,8 @@ function renderResources() {
         const percentage = resource.requiredQuantity === 0
             ? 100
             : Math.min(resource.collectedQuantity * 100 / resource.requiredQuantity, 100);
+        const stackSize = resource.stackSize || 64;
+        const requiredStackSummary = resource.requiredStackSummary || "0 bloques";
 
         return `
             <article class="item-card resource-card" data-resource-card="${resource.id}" draggable="${canDrag}">
@@ -962,6 +965,21 @@ function renderResources() {
                             aria-label="Cantidad necesaria de ${escapeHtml(resource.name)}"
                         >
                     </label>
+                    <label>
+                        <span>Stack</span>
+                        <input
+                            type="number"
+                            min="1"
+                            value="${stackSize}"
+                            data-resource-quantity="${resource.id}"
+                            data-quantity-field="stackSize"
+                            aria-label="Tamano de stack de ${escapeHtml(resource.name)}"
+                        >
+                    </label>
+                    <div class="stack-summary">
+                        <span>Stacks necesarios</span>
+                        <strong>${escapeHtml(requiredStackSummary)}</strong>
+                    </div>
                 </div>
                 <div class="progress-track">
                     <div class="progress-bar" style="width: ${percentage}%"></div>
@@ -1166,6 +1184,7 @@ function resetResourceForm() {
     els.resourceName.value = "";
     els.requiredQuantity.value = "";
     els.collectedQuantity.value = "";
+    els.stackSize.value = "";
     els.resourceImportFile.value = "";
 }
 
@@ -1201,6 +1220,7 @@ function setResourceFormEnabled(enabled) {
     els.resourceName.disabled = !enabled;
     els.requiredQuantity.disabled = !enabled;
     els.collectedQuantity.disabled = !enabled;
+    els.stackSize.disabled = !enabled;
     els.resourceForm.querySelector("button").disabled = !enabled;
     els.resourceImportFile.disabled = !enabled;
 }
@@ -1217,7 +1237,8 @@ async function updateResourceQuantity(resourceId, field, value) {
     const payload = {
         name: resource.name,
         requiredQuantity: field === "requiredQuantity" ? value : resource.requiredQuantity,
-        collectedQuantity: field === "collectedQuantity" ? value : resource.collectedQuantity
+        collectedQuantity: field === "collectedQuantity" ? value : resource.collectedQuantity,
+        stackSize: field === "stackSize" ? value : resource.stackSize || 64
     };
 
     await api(`/worlds/${world.id}/tasks/${task.id}/resources/${resourceId}`, {
@@ -1819,7 +1840,8 @@ function bindEvents() {
         const payload = {
             name: els.resourceName.value.trim(),
             requiredQuantity: Number(els.requiredQuantity.value),
-            collectedQuantity: Number(els.collectedQuantity.value)
+            collectedQuantity: Number(els.collectedQuantity.value),
+            stackSize: Number(els.stackSize.value) || 64
         };
 
         const id = els.resourceId.value;
@@ -1977,6 +1999,7 @@ function bindEvents() {
             els.resourceName.value = resource.name;
             els.requiredQuantity.value = resource.requiredQuantity;
             els.collectedQuantity.value = resource.collectedQuantity;
+            els.stackSize.value = resource.stackSize || 64;
             return;
         }
 

@@ -226,15 +226,19 @@
                             <input type="hidden" id="resourceId">
                             <div class="field-group">
                                 <label for="resourceName">Recurso</label>
-                                <input id="resourceName" type="text" placeholder="Bloques de piedra" required>
+                                <input id="resourceName" type="text" required>
                             </div>
                             <div class="field-group">
                                 <label for="requiredQuantity">Necesario</label>
-                                <input id="requiredQuantity" type="number" min="0" placeholder="64" required>
+                                <input id="requiredQuantity" type="number" min="0" required>
                             </div>
                             <div class="field-group">
                                 <label for="collectedQuantity">Conseguido</label>
-                                <input id="collectedQuantity" type="number" min="0" placeholder="40" required>
+                                <input id="collectedQuantity" type="number" min="0" required>
+                            </div>
+                            <div class="field-group">
+                                <label for="stackSize">Tamaño stack</label>
+                                <input id="stackSize" type="number" min="1">
                             </div>
                             <button type="submit" class="primary-button resource-save-button">Guardar recurso</button>
                         </form>
