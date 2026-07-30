@@ -19,7 +19,8 @@ const state = {
     presetTypeFilter: "all",
     presetSort: "popular",
     expandedGuideIds: new Set(),
-    draggedTaskId: null
+    draggedTaskId: null,
+    draggedResourceId: null
 };
 
 const els = {
@@ -94,6 +95,7 @@ const els = {
     collectedQuantity: document.getElementById("collectedQuantity"),
     resourceList: document.getElementById("resourceList"),
     resourceFilter: document.getElementById("resourceFilter"),
+    resourceImportFile: document.getElementById("resourceImportFile"),
     progressLabel: document.getElementById("progressLabel"),
     progressValue: document.getElementById("progressValue"),
     progressBar: document.getElementById("progressBar"),
@@ -131,8 +133,9 @@ const els = {
 };
 
 async function api(path, options = {}) {
+    const isFormData = options.body instanceof FormData;
     const headers = {
-        "Content-Type": "application/json",
+        ...(!isFormData ? { "Content-Type": "application/json" } : {}),
         ...(options.headers || {})
     };
 
@@ -902,12 +905,23 @@ function renderResources() {
 
             return true;
         })
-        .sort((first, second) => first.id - second.id);
+        .sort((first, second) => {
+            const firstOrder = first.sortOrder || 0;
+            const secondOrder = second.sortOrder || 0;
+
+            if (firstOrder !== secondOrder) {
+                return firstOrder - secondOrder;
+            }
+
+            return first.id - second.id;
+        });
 
     if (filteredResources.length === 0) {
         els.resourceList.innerHTML = `<div class="empty-state">Sin recursos</div>`;
         return;
     }
+
+    const canDrag = state.resourceFilter === "all";
 
     els.resourceList.innerHTML = filteredResources.map(resource => {
         const statusClass = resource.completed ? "" : " pending";
@@ -917,9 +931,12 @@ function renderResources() {
             : Math.min(resource.collectedQuantity * 100 / resource.requiredQuantity, 100);
 
         return `
-            <article class="item-card">
+            <article class="item-card resource-card" data-resource-card="${resource.id}" draggable="${canDrag}">
                 <div class="status-line">
-                    <strong>${escapeHtml(resource.name)}</strong>
+                    <div class="resource-title-line">
+                        ${canDrag ? `<span class="drag-handle" title="Arrastrar recurso">${dragHandleIcon()}</span>` : ""}
+                        <strong>${escapeHtml(resource.name)}</strong>
+                    </div>
                     <span class="status-pill${statusClass}">${statusText}</span>
                 </div>
                 <div class="resource-inline-edit">
@@ -1149,6 +1166,7 @@ function resetResourceForm() {
     els.resourceName.value = "";
     els.requiredQuantity.value = "";
     els.collectedQuantity.value = "";
+    els.resourceImportFile.value = "";
 }
 
 function resetGuideForm() {
@@ -1184,6 +1202,7 @@ function setResourceFormEnabled(enabled) {
     els.requiredQuantity.disabled = !enabled;
     els.collectedQuantity.disabled = !enabled;
     els.resourceForm.querySelector("button").disabled = !enabled;
+    els.resourceImportFile.disabled = !enabled;
 }
 
 async function updateResourceQuantity(resourceId, field, value) {
@@ -1247,6 +1266,27 @@ function getTaskCardAfterPointer(container, pointerY) {
     }).element;
 }
 
+function getResourceCardAfterPointer(container, pointerY) {
+    const cards = [...container.querySelectorAll("[data-resource-card]:not(.dragging)")];
+
+    return cards.reduce((closest, card) => {
+        const box = card.getBoundingClientRect();
+        const offset = pointerY - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+            return {
+                offset,
+                element: card
+            };
+        }
+
+        return closest;
+    }, {
+        offset: Number.NEGATIVE_INFINITY,
+        element: null
+    }).element;
+}
+
 async function saveTaskOrderFromDom() {
     const world = selectedWorld();
 
@@ -1273,6 +1313,37 @@ async function saveTaskOrderFromDom() {
     } catch (error) {
         showToast("No se pudo guardar el orden");
         await loadSelectedWorld();
+    }
+}
+
+async function saveResourceOrderFromDom() {
+    const world = selectedWorld();
+    const task = selectedTask();
+
+    if (!world || !task || state.resourceFilter !== "all") {
+        return;
+    }
+
+    const resourceIds = [...els.resourceList.querySelectorAll("[data-resource-card]")]
+        .map(card => Number(card.dataset.resourceCard));
+    const currentResourceIds = state.resources.map(resource => resource.id);
+    const orderChanged = resourceIds.some((resourceId, index) => resourceId !== currentResourceIds[index]);
+
+    if (!orderChanged) {
+        return;
+    }
+
+    try {
+        state.resources = await api(`/worlds/${world.id}/tasks/${task.id}/resources/order`, {
+            method: "PUT",
+            body: body(resourceIds)
+        });
+        renderResources();
+        showToast("Orden de recursos guardado");
+    } catch (error) {
+        showToast("No se pudo guardar el orden de recursos");
+        await loadSelectedTaskResources();
+        renderAll();
     }
 }
 
@@ -1776,9 +1847,87 @@ function bindEvents() {
         }
     });
 
+    els.resourceImportFile.addEventListener("change", async event => {
+        const file = event.target.files[0];
+        const world = selectedWorld();
+        const task = selectedTask();
+
+        if (!file) {
+            return;
+        }
+
+        if (!world || !task) {
+            showToast("Selecciona una tarea");
+            event.target.value = "";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+        event.target.disabled = true;
+
+        try {
+            const result = await api(`/worlds/${world.id}/tasks/${task.id}/resources/import`, {
+                method: "POST",
+                body: formData
+            });
+
+            await loadSelectedTaskResources();
+            renderAll();
+            showToast(`Importados ${result.importedCount} materiales`);
+        } catch (error) {
+            showToast("No se pudo importar el archivo");
+        } finally {
+            event.target.value = "";
+            event.target.disabled = !selectedTask();
+        }
+    });
+
     els.resourceFilter.addEventListener("change", () => {
         state.resourceFilter = els.resourceFilter.value;
         renderResources();
+    });
+
+    els.resourceList.addEventListener("dragstart", event => {
+        const card = event.target.closest("[data-resource-card]");
+
+        if (!card || state.resourceFilter !== "all") {
+            return;
+        }
+
+        state.draggedResourceId = Number(card.dataset.resourceCard);
+        card.classList.add("dragging");
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData("text/plain", card.dataset.resourceCard);
+    });
+
+    els.resourceList.addEventListener("dragover", event => {
+        const draggingCard = els.resourceList.querySelector(".dragging");
+
+        if (!draggingCard || state.resourceFilter !== "all") {
+            return;
+        }
+
+        event.preventDefault();
+
+        const afterCard = getResourceCardAfterPointer(els.resourceList, event.clientY);
+
+        if (afterCard === null) {
+            els.resourceList.appendChild(draggingCard);
+        } else {
+            els.resourceList.insertBefore(draggingCard, afterCard);
+        }
+    });
+
+    els.resourceList.addEventListener("dragend", async event => {
+        const card = event.target.closest("[data-resource-card]");
+
+        if (card) {
+            card.classList.remove("dragging");
+        }
+
+        state.draggedResourceId = null;
+        await saveResourceOrderFromDom();
     });
 
     els.resourceList.addEventListener("change", async event => {

@@ -8,9 +8,11 @@ import java.util.Optional;
 
 public interface TaskResourceRepository extends JpaRepository<TaskResource, Long> {
 
-    List<TaskResource> findByTaskIdOrderByIdAsc(Long taskId);
+    List<TaskResource> findByTaskIdOrderBySortOrderAscIdAsc(Long taskId);
 
     Optional<TaskResource> findByTaskIdAndId(Long taskId, Long id);
+
+    long countByTaskId(Long taskId);
 
     void deleteByTaskId(Long taskId);
 }
