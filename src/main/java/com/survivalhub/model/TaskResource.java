@@ -102,6 +102,11 @@ public class TaskResource {
     }
 
     @Transient
+    public int getRemainingQuantity() {
+        return Math.max(requiredQuantity - collectedQuantity, 0);
+    }
+
+    @Transient
     public int getRequiredStacks() {
         int currentStackSize = getStackSize();
 

@@ -932,6 +932,7 @@ function renderResources() {
             : Math.min(resource.collectedQuantity * 100 / resource.requiredQuantity, 100);
         const stackSize = resource.stackSize || 64;
         const requiredStackSummary = resource.requiredStackSummary || "0 bloques";
+        const remainingQuantity = resource.remainingQuantity ?? Math.max(resource.requiredQuantity - resource.collectedQuantity, 0);
 
         return `
             <article class="item-card resource-card" data-resource-card="${resource.id}" draggable="${canDrag}">
@@ -984,9 +985,12 @@ function renderResources() {
                 <div class="progress-track">
                     <div class="progress-bar" style="width: ${percentage}%"></div>
                 </div>
-                <div class="item-actions">
-                    <button type="button" class="small-button" data-edit-resource="${resource.id}">Editar nombre</button>
-                    <button type="button" class="small-button danger" data-delete-resource="${resource.id}">Borrar</button>
+                <div class="resource-footer">
+                    <div class="item-actions">
+                        <button type="button" class="small-button" data-edit-resource="${resource.id}">Editar nombre</button>
+                        <button type="button" class="small-button danger" data-delete-resource="${resource.id}">Borrar</button>
+                    </div>
+                    <strong class="resource-remaining">Restante: ${remainingQuantity}</strong>
                 </div>
             </article>
         `;

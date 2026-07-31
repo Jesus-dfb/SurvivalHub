@@ -46,4 +46,18 @@ class TaskResourceTest {
         assertThat(resource.getRequiredLooseItems()).isZero();
         assertThat(resource.getRequiredStackSummary()).isEqualTo("2 stacks");
     }
+
+    @Test
+    void remainingQuantityShowsMissingAmount() {
+        TaskResource resource = new TaskResource(null, 1L, "Piedra", 64, 40);
+
+        assertThat(resource.getRemainingQuantity()).isEqualTo(24);
+    }
+
+    @Test
+    void remainingQuantityDoesNotGoBelowZero() {
+        TaskResource resource = new TaskResource(null, 1L, "Andamio", 680, 690);
+
+        assertThat(resource.getRemainingQuantity()).isZero();
+    }
 }

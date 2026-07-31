@@ -1027,6 +1027,19 @@ textarea {
     font-size: 15px;
 }
 
+.resource-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.resource-remaining {
+    color: var(--muted);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
 .item-card {
     display: grid;
     gap: 10px;
@@ -1388,6 +1401,15 @@ textarea {
     .resource-save-button {
         width: 100%;
         justify-self: stretch;
+    }
+
+    .resource-footer {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .resource-remaining {
+        align-self: flex-end;
     }
 
     .resource-import-box {
