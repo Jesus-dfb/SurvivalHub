@@ -208,6 +208,7 @@ collectedQuantity >= requiredQuantity
 ```
 
 Ese estado se calcula automaticamente en el modelo `TaskResource`.
+La cantidad restante tambien se calcula automaticamente como `requiredQuantity - collectedQuantity`, con minimo `0`.
 
 Cada recurso puede tener un tamano de stack. Con ese dato la API calcula automaticamente cuantos stacks completos y cuantos bloques sueltos hacen falta:
 
