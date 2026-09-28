@@ -37,6 +37,9 @@ El proyecto esta pensado como portfolio junior: combina backend REST con Spring 
 - HTML, CSS y JavaScript
 
 Lombok esta disponible como dependencia, pero el codigo principal mantiene getters, setters y constructores explicitos para facilitar el aprendizaje.
+## Arrancar en la nube
+
+https://survivalhub.onrender.com
 
 ## Arrancar en local
 
